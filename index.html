@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7 rrem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7rem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -85,15 +85,17 @@
 
         .news-item { padding: 16px 0; border-bottom: 1px dashed var(--border-line); }
         .news-item:last-child { border: none; }
-        .news-meta { font-size: 0.75rem; color: var(--mist-grey); margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .news-body { font-size: 0.9rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; }
+        .news-meta { font-size: 0.75rem; color: var(--mist-grey); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .news-body-editable { font-size: 0.9rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; }
+        .news-body-editable:focus { background: var(--white); border-color: var(--moss-green); outline: none; }
         
         .comment-container { background: var(--bg-base); padding: 12px; margin-top: 12px; }
         .comment-title { font-size: 0.72rem; font-weight: 700; color: var(--moss-green); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .comment-line { font-size: 0.8rem; margin-bottom: 8px; border-bottom: 1px dotted #E0E0D8; padding-bottom: 6px; line-height: 1.4; }
+        .comment-line { font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px dotted #E0E0D8; padding-bottom: 8px; line-height: 1.4; }
         .comment-line:last-child { margin-bottom: 0; border: none; padding-bottom: 0; }
         .comment-user { font-weight: 700; color: var(--ink-black); }
-        .comment-reply { color: #555; padding-left: 10px; border-left: 2px solid var(--moss-green); margin-top: 4px; font-size: 0.78rem; background: #EDF0ED; padding-top: 4px; padding-bottom: 4px; }
+        .comment-time-label { font-size: 0.68rem; color: var(--mist-grey); margin-left: 6px; }
+        .comment-reply { color: #555; padding-left: 10px; border-left: 2px solid var(--moss-green); margin-top: 6px; font-size: 0.78rem; background: #EDF0ED; padding-top: 4px; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         
         .comment-input-group { display: flex; gap: 8px; margin-top: 12px; }
         .comment-input-group .form-control { padding: 6px; font-size: 0.8rem; border: 1px solid var(--border-line); background: var(--white); }
@@ -108,8 +110,8 @@
         .event-time { font-size: 0.75rem; color: var(--mist-grey); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
 
         .partner-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px dashed var(--border-line); }
-        .partner-fields { display: flex; gap: 12px; flex-grow: 1; margin-right: 12px; align-items: center; }
-        .partner-fields .form-control { padding: 6px 4px; font-size: 0.85rem; border-bottom: 1px solid var(--border-line); margin-bottom: 0; }
+        .partner-fields { display: flex; gap: 8px; flex-grow: 1; margin-right: 8px; align-items: center; }
+        .partner-fields .form-control { padding: 6px 4px; font-size: 0.82rem; border-bottom: 1px solid var(--border-line); margin-bottom: 0; }
 
         footer { text-align: center; font-size: 0.7rem; color: var(--mist-grey); padding: 30px 15px; background: var(--bg-base); border-top: 1px solid var(--border-line); margin-top: auto; }
     </style>
@@ -240,7 +242,7 @@
                     <div><button class="btn-action-link" style="padding-bottom:10px; font-weight:700;" onclick="createNewUser()">新增</button></div>
                 </div>
                 
-                <label style="font-size:0.75rem; color:var(--mist-grey); display:block; margin-bottom:12px;">夥伴編輯清單 (點擊欄位即可任意編修，離開欄位即全島同步)</label>
+                <label style="font-size:0.75rem; color:var(--mist-grey); display:block; margin-bottom:12px;">夥伴編輯清單 (可編修全欄位包含 User ID，離焦即全島同步)</label>
                 <div id="partnerListContainer"></div>
             </div>
         </div>
@@ -268,7 +270,6 @@
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
         };
 
-        // 本地快取快照記憶體
         let localDB = {
             users: defaultUsers,
             news: [{ id: 201, time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援跨裝置同步。', fileData: null, comments: [] }],
@@ -278,7 +279,8 @@
         let sessionUser = null;
         let tempBase64Data = {}; 
         let currentlyEditingUserId = null; 
-        let isFirebaseInitialized = false; // 標記 Firebase 第一次資料載入是否完成
+        let currentlyEditingNewsId = null; // 🛑 防止公告編修時被刷新覆蓋
+        let isFirebaseInitialized = false; 
 
         // 實時雲端監聽器
         db.ref('flower_lab').on('value', (snapshot) => {
@@ -297,7 +299,6 @@
                 db.ref('flower_lab').set(localDB);
             }
 
-            // 🔐 雲端資料首次就緒時，觸發自動登入檢查
             if (!isFirebaseInitialized) {
                 isFirebaseInitialized = true;
                 checkAutoLogin();
@@ -311,23 +312,26 @@
         function syncUIDisplays() {
             const activeTab = document.querySelector('.content-panel.active');
             if (!activeTab) return;
+            
+            // 阻斷渲染保護機制：當正在輸入留言或正在編輯公告文字時，不觸發 DOM 刷新
+            if (document.activeElement && (
+                document.activeElement.classList.contains('comment-input-field') || 
+                document.activeElement.classList.contains('news-body-editable')
+            )) return;
+
             if (activeTab.id === 'panel-news') fillNewsData();
             if (activeTab.id === 'panel-overview') fillEventsData();
             if (activeTab.id === 'panel-manage' && !currentlyEditingUserId) fillPartnersData();
         }
 
-        // 檢查瀏覽器內是否有留存登入憑證
         function checkAutoLogin() {
             const savedSession = localStorage.getItem('wh_logged_session');
             if (savedSession) {
                 try {
                     const parsed = JSON.parse(savedSession);
-                    // 驗證本地留存的帳號與雲端最新密碼是否相符
                     if (localDB.users[parsed.id] && localDB.users[parsed.id].pwd === parsed.pwd) {
-                        // 密碼正確，直接執行登入渲染
                         executeLoginUI(parsed.id, localDB.users[parsed.id]);
                     } else {
-                        // 如果密碼在雲端已經被改掉，清除過期憑證
                         localStorage.removeItem('wh_logged_session');
                     }
                 } catch (e) {
@@ -357,17 +361,13 @@
 
             if (localDB.users[uid] && localDB.users[uid].pwd === pwd) {
                 const userObj = localDB.users[uid];
-                
-                // 💾 登入成功，將憑證寫入 localStorage 實現保持登入
                 localStorage.setItem('wh_logged_session', JSON.stringify({ id: uid, pwd: pwd }));
-                
                 executeLoginUI(uid, userObj);
             } else {
                 alert('密碼驗證失敗或帳號不存在！');
             }
         }
 
-        // 抽取出來的登入介面渲染邏輯
         function executeLoginUI(uid, userObj) {
             sessionUser = { id: uid, ...userObj };
             document.getElementById('loginScreen').style.display = 'none';
@@ -381,9 +381,7 @@
 
         function performLogout() {
             sessionUser = null;
-            // ❌ 登出時，徹底清除保持登入憑證
             localStorage.removeItem('wh_logged_session');
-            
             document.getElementById('userIdInput').value = '';
             document.getElementById('passwordInput').value = '';
             document.getElementById('userGreeting').innerText = '';
@@ -416,6 +414,7 @@
             document.getElementById(`panel-${panelId}`).classList.add('active');
             
             currentlyEditingUserId = null; 
+            currentlyEditingNewsId = null;
             syncUIDisplays();
         }
 
@@ -437,28 +436,31 @@
             }
         }
 
-        // ─── NEWS 模組邏輯 ───
+        // ─── NEWS 模組邏輯（支援可供編輯、即時時間戳留言） ───
         function fillNewsData() {
             const container = document.getElementById('newsListContainer');
-            if (document.activeElement && document.activeElement.classList.contains('comment-input-field')) return;
             if (!localDB.news) localDB.news = [];
 
             container.innerHTML = localDB.news.length === 0 ? '<p style="font-size:0.8rem; color:var(--mist-grey); padding:20px 0;">暫無公告</p>' : '';
+            const isAdmin = (sessionUser.role === 'admin');
 
             localDB.news.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'news-item';
-                const isAdmin = (sessionUser.role === 'admin');
 
                 let commentsHtml = '';
                 if (item.comments) {
                     item.comments.forEach((c, cIdx) => {
-                        let adminReplyArea = c.reply ? `<div class="comment-reply"><strong>✍️ ${c.replyUser}：</strong>${c.reply}</div>` : '';
+                        let adminReplyArea = c.reply ? `<div class="comment-reply"><strong>✍️ ${c.replyUser}：</strong><span>${c.reply}</span></div>` : '';
                         let replyBtn = (isAdmin && !c.reply) ? `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="replyComment(${item.id}, ${cIdx})">回覆</button>` : '';
                         
                         commentsHtml += `
                             <div class="comment-line">
-                                <span class="comment-user">${c.user}：</span> ${c.text} ${replyBtn}
+                                <div>
+                                    <span class="comment-user">${c.user}</span>
+                                    <span class="comment-time-label">⏱️ ${c.time || ''}</span>：
+                                    <span>${c.text}</span> ${replyBtn}
+                                </div>
                                 ${adminReplyArea}
                             </div>
                         `;
@@ -467,16 +469,21 @@
 
                 let imgHtml = item.fileData ? `<div style="margin-top:8px;"><img src="${item.fileData}" style="max-width:100%; max-height:150px; border:1px solid var(--border-line); padding:2px;"></div>` : '';
 
+                // contenteditable 設定為管理員才能編輯，離焦即刻儲存並即時推送到雲端
                 div.innerHTML = `
                     <div class="news-meta">
-                        <span>⏱️ ${item.time}</span>
+                        <span>⏱️ ${item.time} ${isAdmin ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 可直接點擊文字編輯)</b>' : ''}</span>
                         ${isAdmin ? `<span style="color:var(--danger-text); cursor:pointer;" onclick="removeNews(${item.id})">刪除</span>` : ''}
                     </div>
-                    <div class="news-body">${item.text} ${imgHtml}</div>
+                    <div class="news-body-editable" 
+                         contenteditable="${isAdmin}" 
+                         onfocus="currentlyEditingNewsId=${item.id}"
+                         onblur="commitNewsEdit(${item.id}, this)">${item.text}</div>
+                    ${imgHtml}
                     
                     <div class="comment-container">
                         <div class="comment-title">Comments</div>
-                        ${commentsHtml || '<div style="color:var(--mist-grey); font-size:0.72rem; margin-bottom:4px;">No comments yet</div>'}
+                        ${commentsHtml || '<div style="color:var(--mist-grey); font-size:0.72rem; margin-bottom:12px;">No comments yet</div>'}
                         <div class="comment-input-group">
                             <input type="text" class="form-control comment-input-field" id="cInput-${item.id}" placeholder="留下您的回應...">
                             <button class="btn-action-link" style="font-weight:700;" onclick="submitComment(${item.id})">發送</button>
@@ -502,6 +509,17 @@
             pushUpdate();
         }
 
+        // 離焦後儲存修改之公告
+        function commitNewsEdit(newsId, element) {
+            currentlyEditingNewsId = null;
+            const updatedText = element.innerText.trim();
+            const target = localDB.news.find(n => n.id === newsId);
+            if (target && updatedText) {
+                target.text = updatedText;
+                pushUpdate();
+            }
+        }
+
         function removeNews(id) {
             localDB.news = localDB.news.filter(n => n.id !== id);
             pushUpdate();
@@ -511,6 +529,7 @@
             const input = document.getElementById(`cInput-${newsId}`);
             const text = input.value.trim();
             if (!text) return;
+            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || ''; // 取時分秒精簡排版
 
             const target = localDB.news.find(n => n.id === newsId);
             if (target) {
@@ -518,6 +537,7 @@
                 target.comments.push({
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: text,
+                    time: timeStr, // 嵌入即時留言發布時間
                     reply: null,
                     replyUser: null
                 });
@@ -685,7 +705,7 @@
         }
 
 
-        // ─── 登入管理功能欄 ───
+        // ─── 登入管理功能欄（主管理員 yyen77 支援完美修改 User ID 等欄位） ───
         function createNewUser() {
             const id = document.getElementById('newUid').value.trim();
             const pwd = document.getElementById('newPwd').value.trim();
@@ -704,13 +724,43 @@
             fillPartnersData();
         }
 
-        function savePartnerEditLive(id, field, value) {
-            if (localDB.users[id]) {
-                localDB.users[id][field] = value.trim();
+        // 全欄位編輯暫存（包含對 User ID Key 的特別映射處理）
+        function savePartnerEditLive(oldId, field, value) {
+            if (!localDB.users[oldId]) return;
+
+            if (field === 'id') {
+                const newId = value.trim();
+                if (!newId || newId === oldId) return;
+                if (localDB.users[newId]) {
+                    alert('注意：此新 User ID 已被其他夥伴使用！');
+                    return;
+                }
+                // 深拷貝並置換 Key 物件
+                localDB.users[newId] = { ...localDB.users[oldId] };
+                delete localDB.users[oldId];
+                
+                // 如果目前修改的正是目前登入者的 ID，連動更新維持 session 有效
+                if (sessionUser && sessionUser.id === oldId) {
+                    sessionUser.id = newId;
+                    document.getElementById('currentIdentityText').innerText = `${newId} (${sessionUser.nickname})`;
+                    localStorage.setItem('wh_logged_session', JSON.stringify({ id: newId, pwd: sessionUser.pwd }));
+                }
+                currentlyEditingUserId = newId; // 轉移聚焦錨點
+            } else {
+                localDB.users[oldId][field] = value.trim();
+                if (sessionUser && sessionUser.id === oldId) {
+                    if (field === 'pwd') {
+                        localStorage.setItem('wh_logged_session', JSON.stringify({ id: oldId, pwd: value.trim() }));
+                    }
+                    if (field === 'nickname') {
+                        sessionUser.nickname = value.trim();
+                        document.getElementById('currentIdentityText').innerText = `${oldId} (${value.trim()})`;
+                    }
+                }
             }
         }
 
-        function commitPartnerEdit(id) {
+        function commitPartnerEdit() {
             currentlyEditingUserId = null; 
             pushUpdate(); 
         }
@@ -734,17 +784,22 @@
                 const div = document.createElement('div');
                 div.className = 'partner-row';
                 
+                // 將 User ID 也打包成 input 供管理員任意改寫
                 div.innerHTML = `
                     <div class="partner-fields">
-                        <span style="width:75px; font-weight:700; font-size:0.82rem; color:var(--moss-green); word-break:break-all; flex-shrink: 0;">${id}</span>
-                        <input type="text" class="form-control" value="${u.pwd}" 
+                        <input type="text" class="form-control" value="${id}" style="font-weight:700; color:var(--moss-green);"
+                            ${id === 'yyen77' ? 'readonly' : ''}
+                            onfocus="currentlyEditingUserId='${id}'"
+                            onchange="savePartnerEditLive('${id}', 'id', this.value)"
+                            onblur="commitPartnerEdit()">
+                        <input type="text" class="form-control" value="${u.pwd}" placeholder="密碼"
                             onfocus="currentlyEditingUserId='${id}'" 
                             oninput="savePartnerEditLive('${id}', 'pwd', this.value)" 
-                            onblur="commitPartnerEdit('${id}')">
-                        <input type="text" class="form-control" value="${u.nickname}" 
+                            onblur="commitPartnerEdit()">
+                        <input type="text" class="form-control" value="${u.nickname}" placeholder="暱稱"
                             onfocus="currentlyEditingUserId='${id}'" 
                             oninput="savePartnerEditLive('${id}', 'nickname', this.value)" 
-                            onblur="commitPartnerEdit('${id}')">
+                            onblur="commitPartnerEdit()">
                     </div>
                     <div>
                         ${id === 'yyen77' ? '' : `<span style="color:var(--danger-text); font-size:0.78rem; cursor:pointer; text-decoration:underline; flex-shrink: 0;" onclick="deletePartner('${id}')">移除</span>`}
