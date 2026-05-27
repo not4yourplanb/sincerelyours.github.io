@@ -155,7 +155,7 @@
             <div class="nav-tab active" id="tab-news" onclick="switchPanel('news')">NEWS</div>
             <div class="nav-tab" id="tab-overview" onclick="switchPanel('overview')">事件總覽</div>
             <div class="nav-tab" id="tab-apply" onclick="switchPanel('apply')">提交申請</div>
-            <div class="nav-tab" id="tab-manage" onclick="switchPanel('manage')">管理</div>
+            <div class="nav-tab" id="tab-manage" onclick="switchPanel('manage')">登入管理</div>
         </nav>
 
         <div class="content-panel active" id="panel-news">
@@ -180,11 +180,11 @@
             <div class="panel-header">事件總覽</div>
             <div class="filter-group">
                 <select class="form-control" id="eventFilterSelect" onchange="fillEventsData()">
-                    <option value="全部">分類：全部狀態事件足跡</option>
-                    <option value="簽核中">分類：簽核中</option>
-                    <option value="已核准">分類：已核准</option>
-                    <option value="已駁回">分類：已駁回</option>
-                    <option value="已取消">分類：已取消</option>
+                    <option value="全部">全部</option>
+                    <option value="簽核中">簽核中</option>
+                    <option value="已核准">已核准</option>
+                    <option value="已駁回">已駁回</option>
+                    <option value="已取消">已取消</option>
                 </select>
             </div>
             <div class="card-node" style="padding: 4px 18px;">
