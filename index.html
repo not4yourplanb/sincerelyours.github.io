@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7rem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7 rrem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -277,7 +277,8 @@
 
         let sessionUser = null;
         let tempBase64Data = {}; 
-        let currentlyEditingUserId = null; // 🛑 聚焦防護核心變數
+        let currentlyEditingUserId = null; 
+        let isFirebaseInitialized = false; // 標記 Firebase 第一次資料載入是否完成
 
         // 實時雲端監聽器
         db.ref('flower_lab').on('value', (snapshot) => {
@@ -295,6 +296,12 @@
             } else {
                 db.ref('flower_lab').set(localDB);
             }
+
+            // 🔐 雲端資料首次就緒時，觸發自動登入檢查
+            if (!isFirebaseInitialized) {
+                isFirebaseInitialized = true;
+                checkAutoLogin();
+            }
         });
 
         function pushUpdate() {
@@ -307,6 +314,26 @@
             if (activeTab.id === 'panel-news') fillNewsData();
             if (activeTab.id === 'panel-overview') fillEventsData();
             if (activeTab.id === 'panel-manage' && !currentlyEditingUserId) fillPartnersData();
+        }
+
+        // 檢查瀏覽器內是否有留存登入憑證
+        function checkAutoLogin() {
+            const savedSession = localStorage.getItem('wh_logged_session');
+            if (savedSession) {
+                try {
+                    const parsed = JSON.parse(savedSession);
+                    // 驗證本地留存的帳號與雲端最新密碼是否相符
+                    if (localDB.users[parsed.id] && localDB.users[parsed.id].pwd === parsed.pwd) {
+                        // 密碼正確，直接執行登入渲染
+                        executeLoginUI(parsed.id, localDB.users[parsed.id]);
+                    } else {
+                        // 如果密碼在雲端已經被改掉，清除過期憑證
+                        localStorage.removeItem('wh_logged_session');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('wh_logged_session');
+                }
+            }
         }
 
         function liveCheckUserId() {
@@ -329,21 +356,34 @@
             const pwd = document.getElementById('passwordInput').value.trim();
 
             if (localDB.users[uid] && localDB.users[uid].pwd === pwd) {
-                sessionUser = { id: uid, ...localDB.users[uid] };
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainScreen').style.display = 'flex';
-                document.getElementById('currentIdentityText').innerText = `${sessionUser.id} (${sessionUser.nickname})`;
-
-                initPanelPrivileges();
-                linkValidationContent();
-                switchPanel('news');
+                const userObj = localDB.users[uid];
+                
+                // 💾 登入成功，將憑證寫入 localStorage 實現保持登入
+                localStorage.setItem('wh_logged_session', JSON.stringify({ id: uid, pwd: pwd }));
+                
+                executeLoginUI(uid, userObj);
             } else {
                 alert('密碼驗證失敗或帳號不存在！');
             }
         }
 
+        // 抽取出來的登入介面渲染邏輯
+        function executeLoginUI(uid, userObj) {
+            sessionUser = { id: uid, ...userObj };
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'flex';
+            document.getElementById('currentIdentityText').innerText = `${sessionUser.id} (${sessionUser.nickname})`;
+
+            initPanelPrivileges();
+            linkValidationContent();
+            switchPanel('news');
+        }
+
         function performLogout() {
             sessionUser = null;
+            // ❌ 登出時，徹底清除保持登入憑證
+            localStorage.removeItem('wh_logged_session');
+            
             document.getElementById('userIdInput').value = '';
             document.getElementById('passwordInput').value = '';
             document.getElementById('userGreeting').innerText = '';
