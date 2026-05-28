@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7rem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7 center; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -266,7 +266,7 @@
 
         // 預設核心帳號基礎結構
         const defaultUsers = {
-            'yyen77': { pwd: '960430', nickname: 'yyen77', role: 'admin' },
+            'yyen77': { pwd: '0430', nickname: 'yyen77', role: 'admin' },
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
         };
 
@@ -279,7 +279,7 @@
         let sessionUser = null;
         let tempBase64Data = {}; 
         let currentlyEditingUserId = null; 
-        let currentlyEditingNewsId = null; // 🛑 防止公告編修時被刷新覆蓋
+        let currentlyEditingNewsId = null; 
         let isFirebaseInitialized = false; 
 
         // 實時雲端監聽器
@@ -313,7 +313,6 @@
             const activeTab = document.querySelector('.content-panel.active');
             if (!activeTab) return;
             
-            // 阻斷渲染保護機制：當正在輸入留言或正在編輯公告文字時，不觸發 DOM 刷新
             if (document.activeElement && (
                 document.activeElement.classList.contains('comment-input-field') || 
                 document.activeElement.classList.contains('news-body-editable')
@@ -393,7 +392,8 @@
             const isAdmin = (sessionUser.role === 'admin');
             const navbar = document.getElementById('systemNavbar');
             
-            if (isAdmin) {
+            // yyen77 擁有完整的後台管理與公告發佈權限
+            if (sessionUser.id === 'yyen77' || isAdmin) {
                 navbar.classList.remove('three-tabs');
                 document.getElementById('tab-manage').style.display = 'block';
                 document.getElementById('adminNewsOp').style.display = 'block';
@@ -436,13 +436,13 @@
             }
         }
 
-        // ─── NEWS 模組邏輯（支援可供編輯、即時時間戳留言） ───
+        // ─── NEWS 模組邏輯 ───
         function fillNewsData() {
             const container = document.getElementById('newsListContainer');
             if (!localDB.news) localDB.news = [];
 
             container.innerHTML = localDB.news.length === 0 ? '<p style="font-size:0.8rem; color:var(--mist-grey); padding:20px 0;">暫無公告</p>' : '';
-            const isAdmin = (sessionUser.role === 'admin');
+            const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
 
             localDB.news.forEach(item => {
                 const div = document.createElement('div');
@@ -469,7 +469,6 @@
 
                 let imgHtml = item.fileData ? `<div style="margin-top:8px;"><img src="${item.fileData}" style="max-width:100%; max-height:150px; border:1px solid var(--border-line); padding:2px;"></div>` : '';
 
-                // contenteditable 設定為管理員才能編輯，離焦即刻儲存並即時推送到雲端
                 div.innerHTML = `
                     <div class="news-meta">
                         <span>⏱️ ${item.time} ${isAdmin ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 可直接點擊文字編輯)</b>' : ''}</span>
@@ -509,7 +508,6 @@
             pushUpdate();
         }
 
-        // 離焦後儲存修改之公告
         function commitNewsEdit(newsId, element) {
             currentlyEditingNewsId = null;
             const updatedText = element.innerText.trim();
@@ -529,7 +527,7 @@
             const input = document.getElementById(`cInput-${newsId}`);
             const text = input.value.trim();
             if (!text) return;
-            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || ''; // 取時分秒精簡排版
+            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || ''; 
 
             const target = localDB.news.find(n => n.id === newsId);
             if (target) {
@@ -537,7 +535,7 @@
                 target.comments.push({
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: text,
-                    time: timeStr, // 嵌入即時留言發布時間
+                    time: timeStr, 
                     reply: null,
                     replyUser: null
                 });
@@ -614,13 +612,26 @@
             switchPanel('overview');
         }
 
+        // ─── 🛡️ 雙向交叉簽核核心邏輯 ───
         function fillEventsData() {
             const container = document.getElementById('eventsContainer');
             container.innerHTML = '';
             if(!localDB.events) localDB.events = [];
 
             const filterValue = document.getElementById('eventFilterSelect').value;
-            let filtered = (sessionUser.role === 'admin') ? localDB.events : localDB.events.filter(e => e.applicantId === sessionUser.id);
+            
+            // 雙向簽核權限動態判定：
+            // yyen77 可以看到並處理 yychiii_ 的單子
+            // yychiii_ 可以看到並處理 yyen77 的單子
+            // 其餘一般人員只能看到自己的單子
+            let filtered = [];
+            if (sessionUser.id === 'yyen77') {
+                filtered = localDB.events.filter(e => e.applicantId === 'yyen77' || e.applicantId === 'yychiii_');
+            } else if (sessionUser.id === 'yychiii_') {
+                filtered = localDB.events.filter(e => e.applicantId === 'yychiii_' || e.applicantId === 'yyen77');
+            } else {
+                filtered = localDB.events.filter(e => e.applicantId === sessionUser.id);
+            }
 
             if (filterValue !== '全部') {
                 filtered = filtered.filter(e => e.status === filterValue);
@@ -642,10 +653,20 @@
 
                 let actionBtn = '';
                 if (ev.status === '簽核中') {
+                    // 1. 任何人都可以取消自己送出的簽核中申請
                     if (sessionUser.id === ev.applicantId) {
                         actionBtn = `<button class="btn-action-link btn-action-danger" onclick="updateEventStatus(${ev.id}, '已取消')">取消申請</button>`;
                     }
-                    if (sessionUser.role === 'admin') {
+                    
+                    // 2. 核心對等互簽機制判定
+                    let canApprove = false;
+                    if (ev.applicantId === 'yychiii_' && sessionUser.id === 'yyen77') {
+                        canApprove = true; // yychiii_ 的申請單由 yyen77 簽核
+                    } else if (ev.applicantId === 'yyen77' && sessionUser.id === 'yychiii_') {
+                        canApprove = true; // yyen77 的申請單由 yychiii_ 簽核
+                    }
+
+                    if (canApprove) {
                         actionBtn += `
                             <span>
                                 <button class="btn-action-link" style="color:var(--moss-green); font-weight:700;" onclick="updateEventStatus(${ev.id}, '已核准')">核准</button>
@@ -705,7 +726,7 @@
         }
 
 
-        // ─── 登入管理功能欄（主管理員 yyen77 支援完美修改 User ID 等欄位） ───
+        // ─── 登入管理功能欄 ───
         function createNewUser() {
             const id = document.getElementById('newUid').value.trim();
             const pwd = document.getElementById('newPwd').value.trim();
@@ -724,7 +745,6 @@
             fillPartnersData();
         }
 
-        // 全欄位編輯暫存（包含對 User ID Key 的特別映射處理）
         function savePartnerEditLive(oldId, field, value) {
             if (!localDB.users[oldId]) return;
 
@@ -735,17 +755,15 @@
                     alert('注意：此新 User ID 已被其他夥伴使用！');
                     return;
                 }
-                // 深拷貝並置換 Key 物件
                 localDB.users[newId] = { ...localDB.users[oldId] };
                 delete localDB.users[oldId];
                 
-                // 如果目前修改的正是目前登入者的 ID，連動更新維持 session 有效
                 if (sessionUser && sessionUser.id === oldId) {
                     sessionUser.id = newId;
                     document.getElementById('currentIdentityText').innerText = `${newId} (${sessionUser.nickname})`;
                     localStorage.setItem('wh_logged_session', JSON.stringify({ id: newId, pwd: sessionUser.pwd }));
                 }
-                currentlyEditingUserId = newId; // 轉移聚焦錨點
+                currentlyEditingUserId = newId; 
             } else {
                 localDB.users[oldId][field] = value.trim();
                 if (sessionUser && sessionUser.id === oldId) {
@@ -784,7 +802,6 @@
                 const div = document.createElement('div');
                 div.className = 'partner-row';
                 
-                // 將 User ID 也打包成 input 供管理員任意改寫
                 div.innerHTML = `
                     <div class="partner-fields">
                         <input type="text" class="form-control" value="${id}" style="font-weight:700; color:var(--moss-green);"
