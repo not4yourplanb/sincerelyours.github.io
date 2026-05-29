@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7 center; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -83,20 +83,26 @@
         .panel-header { font-family: 'Noto Serif TC', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 1px solid var(--ink-black); display: flex; justify-content: space-between; align-items: center; }
         .card-node { background: var(--white); border: 1px solid var(--border-line); padding: 20px 18px; margin-bottom: 18px; }
 
-        .news-item { padding: 16px 0; border-bottom: 1px dashed var(--border-line); }
+        .news-item { padding: 16px 0; border-bottom: 1px solid var(--border-line); }
         .news-item:last-child { border: none; }
         .news-meta { font-size: 0.75rem; color: var(--mist-grey); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .news-body-editable { font-size: 0.9rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; }
+        .news-body-editable { font-size: 0.92rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; }
         .news-body-editable:focus { background: var(--white); border-color: var(--moss-green); outline: none; }
         
-        .comment-container { background: var(--bg-base); padding: 12px; margin-top: 12px; }
-        .comment-title { font-size: 0.72rem; font-weight: 700; color: var(--moss-green); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .comment-line { font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px dotted #E0E0D8; padding-bottom: 8px; line-height: 1.4; }
-        .comment-line:last-child { margin-bottom: 0; border: none; padding-bottom: 0; }
+        .comment-container { background: var(--bg-base); padding: 14px; margin-top: 12px; border-radius: 2px; }
+        .comment-title { font-size: 0.72rem; font-weight: 700; color: var(--moss-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-line); padding-bottom: 4px; }
+        .comment-block { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dotted #D0D0C8; }
+        .comment-block:last-child { margin-bottom: 0; border: none; padding-bottom: 0; }
+        .comment-main-line { font-size: 0.85rem; line-height: 1.5; color: var(--ink-black); }
         .comment-user { font-weight: 700; color: var(--ink-black); }
         .comment-time-label { font-size: 0.68rem; color: var(--mist-grey); margin-left: 6px; }
-        .comment-reply { color: #555; padding-left: 10px; border-left: 2px solid var(--moss-green); margin-top: 6px; font-size: 0.78rem; background: #EDF0ED; padding-top: 4px; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         
+        /* 討論串回覆樣式 */
+        .comment-replies-box { margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--moss-green); background: #EFF2EF; font-size: 0.78rem; }
+        .reply-node { padding: 5px 8px; border-bottom: 1px dashed #E0E2E0; line-height: 1.4; }
+        .reply-node:last-child { border: none; }
+        .reply-user { font-weight: 700; color: #3A4A3A; }
+
         .comment-input-group { display: flex; gap: 8px; margin-top: 12px; }
         .comment-input-group .form-control { padding: 6px; font-size: 0.8rem; border: 1px solid var(--border-line); background: var(--white); }
 
@@ -163,9 +169,9 @@
         <div class="content-panel active" id="panel-news">
             <div class="panel-header">NEWS</div>
             
-            <div class="card-node" id="adminNewsOp" style="display:none; margin-bottom: 20px;">
+            <div class="card-node" id="adminNewsOp" style="margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom:12px;">
-                    <input type="text" class="form-control" id="newsInputArea" placeholder="輸入公告內容...">
+                    <input type="text" class="form-control" id="newsInputArea" placeholder="今天想分享什麼花花世界？輸入公告內容...">
                     <div class="file-upload-wrapper">
                         <label class="file-label" for="newsFile">📎 夾帶檔案 (圖片)</label>
                         <input type="file" id="newsFile" class="file-input" accept="image/*" onchange="previewFile(this, 'newsPreview')">
@@ -270,10 +276,9 @@
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
         };
 
-        // 本地快取（快取完整的雲端資料庫複本，不再對 yychiii_ 的快取進行過濾裁剪）
         let localDB = {
             users: defaultUsers,
-            news: [{ id: 201, time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援跨裝置同步。', fileData: null, comments: [] }],
+            news: [{ id: 201, author: 'System', authorNick: '系統', time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援跨裝置討論串同步。', fileData: null, comments: [] }],
             events: []
         };
 
@@ -283,11 +288,9 @@
         let currentlyEditingNewsId = null; 
         let isFirebaseInitialized = false; 
 
-        // 【安全修正 1】實時雲端監聽器：yychiii_ 和 yyen77 都要完整拉取所有雲端節點，避免本地覆蓋不全
         db.ref('flower_lab').on('value', (snapshot) => {
             const cloudData = snapshot.val();
             if (cloudData) {
-                // 不論是誰，都完整存儲最新雲端狀態到 localDB
                 localDB.users = cloudData.users || defaultUsers;
                 localDB.news = cloudData.news || [];
                 localDB.events = cloudData.events || [];
@@ -307,7 +310,6 @@
             }
         });
 
-        // 【核心排錯 2】採用安全的特定欄位覆蓋，不再全盤盲目 reset
         function pushUpdate() {
             db.ref('flower_lab').update({
                 users: localDB.users,
@@ -399,16 +401,13 @@
             const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
             const navbar = document.getElementById('systemNavbar');
             
-            // 保持原本設定：管理分頁僅給 admin/yyen77 進入
             if (isAdmin) {
                 navbar.classList.remove('three-tabs');
                 document.getElementById('tab-manage').style.display = 'block';
-                document.getElementById('adminNewsOp').style.display = 'block';
                 document.getElementById('adminUserSection').style.display = 'block';
             } else {
                 navbar.classList.add('three-tabs');
                 document.getElementById('tab-manage').style.display = 'none';
-                document.getElementById('adminNewsOp').style.display = 'none';
                 document.getElementById('adminUserSection').style.display = 'none';
             }
         }
@@ -443,7 +442,7 @@
             }
         }
 
-        // ─── NEWS 模組邏輯 ───
+        // ─── NEWS 模組邏輯（發佈與多重複覆討論串升級版） ───
         function fillNewsData() {
             const container = document.getElementById('newsListContainer');
             if (!localDB.news) localDB.news = [];
@@ -455,41 +454,59 @@
                 const div = document.createElement('div');
                 div.className = 'news-item';
 
+                // 建立討論串與留言渲染
                 let commentsHtml = '';
                 if (item.comments) {
                     item.comments.forEach((c, cIdx) => {
-                        let adminReplyArea = c.reply ? `<div class="comment-reply"><strong>✍️ ${c.replyUser}：</strong><span>${c.reply}</span></div>` : '';
-                        let replyBtn = (isAdmin && !c.reply) ? `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="replyComment(${item.id}, ${cIdx})">回覆</button>` : '';
+                        // 渲染無限多次的子討論串回覆
+                        let subRepliesHtml = '';
+                        if (c.replies) {
+                            c.replies.forEach(r => {
+                                subRepliesHtml += `
+                                    <div class="reply-node">
+                                        <span class="reply-user">✍️ ${r.user}</span> 
+                                        <span class="comment-time-label">⏱️ ${r.time || ''}</span>：
+                                        <span>${r.text}</span>
+                                    </div>
+                                `;
+                            });
+                        }
+
+                        // 所有登入者皆擁有對該留言按「回覆」展開討論串的資格
+                        let replyBtn = `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="replyCommentThread(${item.id}, ${cIdx})">回覆</button>`;
                         
                         commentsHtml += `
-                            <div class="comment-line">
-                                <div>
+                            <div class="comment-block">
+                                <div class="comment-main-line">
                                     <span class="comment-user">${c.user}</span>
                                     <span class="comment-time-label">⏱️ ${c.time || ''}</span>：
                                     <span>${c.text}</span> ${replyBtn}
                                 </div>
-                                ${adminReplyArea}
+                                ${subRepliesHtml ? `<div class="comment-replies-box">${subRepliesHtml}</div>` : ''}
                             </div>
                         `;
                     });
                 }
 
                 let imgHtml = item.fileData ? `<div style="margin-top:8px;"><img src="${item.fileData}" style="max-width:100%; max-height:150px; border:1px solid var(--border-line); padding:2px;"></div>` : '';
+                
+                // 只有發佈者或 Admin 可以刪除與點擊直接編輯公告本文
+                const isAuthor = (item.author === sessionUser.id || isAdmin);
 
                 div.innerHTML = `
                     <div class="news-meta">
-                        <span>⏱️ ${item.time} ${isAdmin ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 可直接點擊文字編輯)</b>' : ''}</span>
-                        ${isAdmin ? `<span style="color:var(--danger-text); cursor:pointer;" onclick="removeNews(${item.id})">刪除</span>` : ''}
+                        <span>👤 發佈：${item.authorNick || item.author || '匿名'} | ⏱️ ${item.time} ${isAuthor ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 點擊文字可編修)</b>' : ''}</span>
+                        ${isAuthor ? `<span style="color:var(--danger-text); cursor:pointer;" onclick="removeNews(${item.id})">刪除</span>` : ''}
                     </div>
                     <div class="news-body-editable" 
-                         contenteditable="${isAdmin}" 
+                         contenteditable="${isAuthor}" 
                          onfocus="currentlyEditingNewsId=${item.id}"
                          onblur="commitNewsEdit(${item.id}, this)">${item.text}</div>
                     ${imgHtml}
                     
                     <div class="comment-container">
-                        <div class="comment-title">Comments</div>
-                        ${commentsHtml || '<div style="color:var(--mist-grey); font-size:0.72rem; margin-bottom:12px;">No comments yet</div>'}
+                        <div class="comment-title">討論足跡 (Comments)</div>
+                        ${commentsHtml || '<div style="color:var(--mist-grey); font-size:0.72rem; margin-bottom:12px;">尚無足跡，快來留下第一筆回應吧</div>'}
                         <div class="comment-input-group">
                             <input type="text" class="form-control comment-input-field" id="cInput-${item.id}" placeholder="留下您的回應...">
                             <button class="btn-action-link" style="font-weight:700;" onclick="submitComment(${item.id})">發送</button>
@@ -500,6 +517,7 @@
             });
         }
 
+        // 所有人皆可建立新公告
         function createNews() {
             const text = document.getElementById('newsInputArea').value.trim();
             if (!text) return;
@@ -507,7 +525,15 @@
             const attachedFile = tempBase64Data['newsPreview'] || null;
             
             if(!localDB.news) localDB.news = [];
-            localDB.news.unshift({ id: Date.now(), time: timeStr, text: text, fileData: attachedFile, comments: [] });
+            localDB.news.unshift({ 
+                id: Date.now(), 
+                author: sessionUser.id,
+                authorNick: sessionUser.nickname,
+                time: timeStr, 
+                text: text, 
+                fileData: attachedFile, 
+                comments: [] 
+            });
             
             document.getElementById('newsInputArea').value = '';
             document.getElementById('newsPreview').innerHTML = '';
@@ -543,11 +569,33 @@
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: text,
                     time: timeStr, 
-                    reply: null,
-                    replyUser: null
+                    replies: [] // 初始為陣列結構，供無限次重複回覆
                 });
                 input.value = '';
-                pushUpdate(); // 這裏執行時，完整 localDB 會安全同步上雲端，留言絕不消失
+                pushUpdate();
+            }
+        }
+
+        // 【調整 2】同則留言可多次回覆、所有人皆可參與的討論串機制
+        function replyCommentThread(newsId, commentIdx) {
+            const replyText = prompt('請輸入您的討論回覆內容：');
+            if (replyText === null || replyText.trim() === "") return;
+            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || '';
+
+            const target = localDB.news.find(n => n.id === newsId);
+            if (target && target.comments && target.comments[commentIdx]) {
+                // 防呆初始化陣列結構
+                if(!target.comments[commentIdx].replies) {
+                    target.comments[commentIdx].replies = [];
+                }
+                
+                // 追加至討論串底端
+                target.comments[commentIdx].replies.push({
+                    user: `${sessionUser.id} (${sessionUser.nickname})`,
+                    text: replyText.trim(),
+                    time: timeStr
+                });
+                pushUpdate();
             }
         }
 
@@ -580,8 +628,6 @@
 
         function executeAppSave(item, valid, note, time, file, lat, lng) {
             if(!localDB.events) localDB.events = [];
-            
-            // 安全追加新單，不破壞舊數據
             localDB.events.unshift({
                 id: Date.now(),
                 applicantId: sessionUser.id,
@@ -605,7 +651,7 @@
             delete tempBase64Data['applyPreview'];
             
             alert(`提交申請成功！足跡已雲端留存。`);
-            pushUpdate(); // 寫入雲端，因為前面沒過濾掉別人的資料，這次上傳完好無缺
+            pushUpdate();
             switchPanel('overview');
         }
 
@@ -617,7 +663,6 @@
 
             const filterValue = document.getElementById('eventFilterSelect').value;
             
-            // 【安全修正 3】僅在網頁渲染時進行過濾，絕對不能在 localDB 的數組核心上過濾，確保 yychiii_ 不會丟失大局資料
             let filtered = [];
             if (sessionUser.id === 'yyen77') {
                 filtered = localDB.events.filter(e => e.applicantId === 'yyen77' || e.applicantId === 'yychiii_');
@@ -647,12 +692,10 @@
 
                 let actionBtn = '';
                 if (ev.status === '簽核中') {
-                    // 1. 任何人都可以取消自己送出的簽核中申請
                     if (sessionUser.id === ev.applicantId) {
                         actionBtn = `<button class="btn-action-link btn-action-danger" onclick="updateEventStatus(${ev.id}, '已取消')">取消申請</button>`;
                     }
                     
-                    // 2. 核心對等互簽機制判定
                     let canApprove = false;
                     if (ev.applicantId === 'yychiii_' && sessionUser.id === 'yyen77') {
                         canApprove = true; 
