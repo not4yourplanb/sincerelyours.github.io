@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7 center; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7rem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -83,25 +83,29 @@
         .panel-header { font-family: 'Noto Serif TC', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 1px solid var(--ink-black); display: flex; justify-content: space-between; align-items: center; }
         .card-node { background: var(--white); border: 1px solid var(--border-line); padding: 20px 18px; margin-bottom: 18px; }
 
-        .news-item { padding: 16px 0; border-bottom: 1px solid var(--border-line); }
+        /* NEWS 區塊樣式優化 */
+        .news-item { padding: 18px 0; border-bottom: 1px solid var(--border-line); }
         .news-item:last-child { border: none; }
-        .news-meta { font-size: 0.75rem; color: var(--mist-grey); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .news-body-editable { font-size: 0.92rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; }
+        .news-meta { font-size: 0.75rem; color: var(--mist-grey); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .news-body-editable { font-size: 0.92rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; white-space: pre-wrap; }
         .news-body-editable:focus { background: var(--white); border-color: var(--moss-green); outline: none; }
         
-        .comment-container { background: var(--bg-base); padding: 14px; margin-top: 12px; border-radius: 2px; }
+        /* 討論串架構 */
+        .comment-container { background: var(--bg-base); padding: 12px 14px; margin-top: 14px; border-radius: 2px; }
         .comment-title { font-size: 0.72rem; font-weight: 700; color: var(--moss-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-line); padding-bottom: 4px; }
-        .comment-block { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dotted #D0D0C8; }
+        
+        .comment-block { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed #D3D3CB; }
         .comment-block:last-child { margin-bottom: 0; border: none; padding-bottom: 0; }
-        .comment-main-line { font-size: 0.85rem; line-height: 1.5; color: var(--ink-black); }
+        
+        .comment-main-line { font-size: 0.85rem; line-height: 1.5; color: var(--ink-black); text-align: left; }
         .comment-user { font-weight: 700; color: var(--ink-black); }
         .comment-time-label { font-size: 0.68rem; color: var(--mist-grey); margin-left: 6px; }
         
-        /* 討論串回覆樣式 */
-        .comment-replies-box { margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--moss-green); background: #EFF2EF; font-size: 0.78rem; }
-        .reply-node { padding: 5px 8px; border-bottom: 1px dashed #E0E2E0; line-height: 1.4; }
+        /* 【核心要求】單獨回覆個別留言的討論串盒群：文字一律完美置左不縮排 */
+        .comment-replies-box { margin-top: 8px; padding-top: 4px; border-top: 1px dotted #DBDBD3; background: transparent; width: 100%; }
+        .reply-node { padding: 6px 0; border-bottom: 1px dotted #EAEAEA; line-height: 1.4; font-size: 0.8rem; text-align: left; color: #3A4A3A; }
         .reply-node:last-child { border: none; }
-        .reply-user { font-weight: 700; color: #3A4A3A; }
+        .reply-user { font-weight: 700; color: var(--moss-green); }
 
         .comment-input-group { display: flex; gap: 8px; margin-top: 12px; }
         .comment-input-group .form-control { padding: 6px; font-size: 0.8rem; border: 1px solid var(--border-line); background: var(--white); }
@@ -169,9 +173,9 @@
         <div class="content-panel active" id="panel-news">
             <div class="panel-header">NEWS</div>
             
-            <div class="card-node" id="adminNewsOp" style="margin-bottom: 20px;">
+            <div class="card-node" id="globalNewsOp" style="margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom:12px;">
-                    <input type="text" class="form-control" id="newsInputArea" placeholder="今天想分享什麼花花世界？輸入公告內容...">
+                    <input type="text" class="form-control" id="newsInputArea" placeholder="今天想發佈什麼實驗室公告？...">
                     <div class="file-upload-wrapper">
                         <label class="file-label" for="newsFile">📎 夾帶檔案 (圖片)</label>
                         <input type="file" id="newsFile" class="file-input" accept="image/*" onchange="previewFile(this, 'newsPreview')">
@@ -270,7 +274,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 預設核心帳號基礎結構
         const defaultUsers = {
             'yyen77': { pwd: '0430', nickname: 'yyen77', role: 'admin' },
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
@@ -278,7 +281,7 @@
 
         let localDB = {
             users: defaultUsers,
-            news: [{ id: 201, author: 'System', authorNick: '系統', time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援跨裝置討論串同步。', fileData: null, comments: [] }],
+            news: [{ id: 201, author: 'System', authorNick: '系統', time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援全員討論串足跡。', fileData: null, comments: [] }],
             events: []
         };
 
@@ -288,6 +291,7 @@
         let currentlyEditingNewsId = null; 
         let isFirebaseInitialized = false; 
 
+        // 監聽全雲端資料庫
         db.ref('flower_lab').on('value', (snapshot) => {
             const cloudData = snapshot.val();
             if (cloudData) {
@@ -310,6 +314,7 @@
             }
         });
 
+        // 大局保存
         function pushUpdate() {
             db.ref('flower_lab').update({
                 users: localDB.users,
@@ -401,6 +406,7 @@
             const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
             const navbar = document.getElementById('systemNavbar');
             
+            // 只有擁有權限者才能使用「登入管理」內部的新增與編輯清單
             if (isAdmin) {
                 navbar.classList.remove('three-tabs');
                 document.getElementById('tab-manage').style.display = 'block';
@@ -442,7 +448,7 @@
             }
         }
 
-        // ─── NEWS 模組邏輯（發佈與多重複覆討論串升級版） ───
+        // ─── NEWS 模組邏輯（全面支援全員發佈、留言、單獨回覆） ───
         function fillNewsData() {
             const container = document.getElementById('newsListContainer');
             if (!localDB.news) localDB.news = [];
@@ -454,7 +460,6 @@
                 const div = document.createElement('div');
                 div.className = 'news-item';
 
-                // 建立討論串與留言渲染
                 let commentsHtml = '';
                 if (item.comments) {
                     item.comments.forEach((c, cIdx) => {
@@ -472,8 +477,8 @@
                             });
                         }
 
-                        // 所有登入者皆擁有對該留言按「回覆」展開討論串的資格
-                        let replyBtn = `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="replyCommentThread(${item.id}, ${cIdx})">回覆</button>`;
+                        // 【單獨回覆個別留言】點擊按鈕直接調用個別留言的回覆函數
+                        let replyBtn = `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="replyIndividualComment(${item.id}, ${cIdx})">回覆</button>`;
                         
                         commentsHtml += `
                             <div class="comment-block">
@@ -490,12 +495,12 @@
 
                 let imgHtml = item.fileData ? `<div style="margin-top:8px;"><img src="${item.fileData}" style="max-width:100%; max-height:150px; border:1px solid var(--border-line); padding:2px;"></div>` : '';
                 
-                // 只有發佈者或 Admin 可以刪除與點擊直接編輯公告本文
+                // 只有發布本人或 Admin 才能編輯或刪除此條 NEWS
                 const isAuthor = (item.author === sessionUser.id || isAdmin);
 
                 div.innerHTML = `
                     <div class="news-meta">
-                        <span>👤 發佈：${item.authorNick || item.author || '匿名'} | ⏱️ ${item.time} ${isAuthor ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 點擊文字可編修)</b>' : ''}</span>
+                        <span>👤 發佈：${item.authorNick || item.author || '匿名'} | ⏱️ ${item.time} ${isAuthor ? '<b style="color:var(--moss-green); font-weight:normal;">(🖋️ 點擊可編輯)</b>' : ''}</span>
                         ${isAuthor ? `<span style="color:var(--danger-text); cursor:pointer;" onclick="removeNews(${item.id})">刪除</span>` : ''}
                     </div>
                     <div class="news-body-editable" 
@@ -517,7 +522,7 @@
             });
         }
 
-        // 所有人皆可建立新公告
+        // 任何登入帳號皆可發佈公告
         function createNews() {
             const text = document.getElementById('newsInputArea').value.trim();
             if (!text) return;
@@ -556,6 +561,7 @@
             pushUpdate();
         }
 
+        // 任何用戶皆可留言
         function submitComment(newsId) {
             const input = document.getElementById(`cInput-${newsId}`);
             const text = input.value.trim();
@@ -569,27 +575,25 @@
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: text,
                     time: timeStr, 
-                    replies: [] // 初始為陣列結構，供無限次重複回覆
+                    replies: []
                 });
                 input.value = '';
                 pushUpdate();
             }
         }
 
-        // 【調整 2】同則留言可多次回覆、所有人皆可參與的討論串機制
-        function replyCommentThread(newsId, commentIdx) {
-            const replyText = prompt('請輸入您的討論回覆內容：');
+        // 【針對單一個別留言進行重複回覆】
+        function replyIndividualComment(newsId, commentIdx) {
+            const replyText = prompt('請輸入您對此留言的回覆討論內容：');
             if (replyText === null || replyText.trim() === "") return;
             const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || '';
 
             const target = localDB.news.find(n => n.id === newsId);
             if (target && target.comments && target.comments[commentIdx]) {
-                // 防呆初始化陣列結構
                 if(!target.comments[commentIdx].replies) {
                     target.comments[commentIdx].replies = [];
                 }
                 
-                // 追加至討論串底端
                 target.comments[commentIdx].replies.push({
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: replyText.trim(),
@@ -655,7 +659,7 @@
             switchPanel('overview');
         }
 
-        // ─── 🛡️ 雙向交叉簽核核心邏輯 ───
+        // ─── 🛡️ 雙向交叉簽核與篩選 ───
         function fillEventsData() {
             const container = document.getElementById('eventsContainer');
             container.innerHTML = '';
@@ -672,6 +676,7 @@
                 filtered = localDB.events.filter(e => e.applicantId === sessionUser.id);
             }
 
+            // 【事件總覽狀態過濾】完整對應：全部、簽核中、已核准、已駁回、已取消
             if (filterValue !== '全部') {
                 filtered = filtered.filter(e => e.status === filterValue);
             }
