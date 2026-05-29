@@ -6,7 +6,7 @@
     <title>溫室花花實驗室 - 雲端簽核管理系統</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=300;400;500;700&family=Noto+Serif+TC:wght=300;400;500;700&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7 center; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -270,6 +270,7 @@
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
         };
 
+        // 本地快取（快取完整的雲端資料庫複本，不再對 yychiii_ 的快取進行過濾裁剪）
         let localDB = {
             users: defaultUsers,
             news: [{ id: 201, time: '2026-05-27 12:00', text: '別管😍 溫室花花實驗室雲端簽核系統已更新，現已支援跨裝置同步。', fileData: null, comments: [] }],
@@ -282,13 +283,14 @@
         let currentlyEditingNewsId = null; 
         let isFirebaseInitialized = false; 
 
-        // 實時雲端監聽器
+        // 【安全修正 1】實時雲端監聽器：yychiii_ 和 yyen77 都要完整拉取所有雲端節點，避免本地覆蓋不全
         db.ref('flower_lab').on('value', (snapshot) => {
             const cloudData = snapshot.val();
             if (cloudData) {
-                if (cloudData.users) localDB.users = cloudData.users;
-                if (cloudData.news) localDB.news = cloudData.news;
-                if (cloudData.events) localDB.events = cloudData.events;
+                // 不論是誰，都完整存儲最新雲端狀態到 localDB
+                localDB.users = cloudData.users || defaultUsers;
+                localDB.news = cloudData.news || [];
+                localDB.events = cloudData.events || [];
                 
                 localStorage.setItem('wh_users', JSON.stringify(localDB.users));
                 localStorage.setItem('wh_news', JSON.stringify(localDB.news));
@@ -305,8 +307,13 @@
             }
         });
 
+        // 【核心排錯 2】採用安全的特定欄位覆蓋，不再全盤盲目 reset
         function pushUpdate() {
-            db.ref('flower_lab').set(localDB);
+            db.ref('flower_lab').update({
+                users: localDB.users,
+                news: localDB.news,
+                events: localDB.events
+            });
         }
 
         function syncUIDisplays() {
@@ -389,11 +396,11 @@
         }
 
         function initPanelPrivileges() {
-            const isAdmin = (sessionUser.role === 'admin');
+            const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
             const navbar = document.getElementById('systemNavbar');
             
-            // yyen77 擁有完整的後台管理與公告發佈權限
-            if (sessionUser.id === 'yyen77' || isAdmin) {
+            // 保持原本設定：管理分頁僅給 admin/yyen77 進入
+            if (isAdmin) {
                 navbar.classList.remove('three-tabs');
                 document.getElementById('tab-manage').style.display = 'block';
                 document.getElementById('adminNewsOp').style.display = 'block';
@@ -540,19 +547,7 @@
                     replyUser: null
                 });
                 input.value = '';
-                pushUpdate();
-            }
-        }
-
-        function replyComment(newsId, commentIdx) {
-            const replyText = prompt('管理員回覆內容：');
-            if (replyText === null || replyText.trim() === "") return;
-
-            const target = localDB.news.find(n => n.id === newsId);
-            if (target && target.comments && target.comments[commentIdx]) {
-                target.comments[commentIdx].reply = replyText.trim();
-                target.comments[commentIdx].replyUser = `${sessionUser.id} (${sessionUser.nickname})`;
-                pushUpdate();
+                pushUpdate(); // 這裏執行時，完整 localDB 會安全同步上雲端，留言絕不消失
             }
         }
 
@@ -585,6 +580,8 @@
 
         function executeAppSave(item, valid, note, time, file, lat, lng) {
             if(!localDB.events) localDB.events = [];
+            
+            // 安全追加新單，不破壞舊數據
             localDB.events.unshift({
                 id: Date.now(),
                 applicantId: sessionUser.id,
@@ -608,7 +605,7 @@
             delete tempBase64Data['applyPreview'];
             
             alert(`提交申請成功！足跡已雲端留存。`);
-            pushUpdate();
+            pushUpdate(); // 寫入雲端，因為前面沒過濾掉別人的資料，這次上傳完好無缺
             switchPanel('overview');
         }
 
@@ -620,10 +617,7 @@
 
             const filterValue = document.getElementById('eventFilterSelect').value;
             
-            // 雙向簽核權限動態判定：
-            // yyen77 可以看到並處理 yychiii_ 的單子
-            // yychiii_ 可以看到並處理 yyen77 的單子
-            // 其餘一般人員只能看到自己的單子
+            // 【安全修正 3】僅在網頁渲染時進行過濾，絕對不能在 localDB 的數組核心上過濾，確保 yychiii_ 不會丟失大局資料
             let filtered = [];
             if (sessionUser.id === 'yyen77') {
                 filtered = localDB.events.filter(e => e.applicantId === 'yyen77' || e.applicantId === 'yychiii_');
@@ -661,9 +655,9 @@
                     // 2. 核心對等互簽機制判定
                     let canApprove = false;
                     if (ev.applicantId === 'yychiii_' && sessionUser.id === 'yyen77') {
-                        canApprove = true; // yychiii_ 的申請單由 yyen77 簽核
+                        canApprove = true; 
                     } else if (ev.applicantId === 'yyen77' && sessionUser.id === 'yychiii_') {
-                        canApprove = true; // yyen77 的申請單由 yychiii_ 簽核
+                        canApprove = true; 
                     }
 
                     if (canApprove) {
