@@ -65,7 +65,7 @@
         header { padding: 24px 20px; border-bottom: 1px solid var(--border-line); background: var(--white); position: relative; text-align: center; }
         .header-main { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink-black); }
         .header-sub { font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--moss-green); letter-spacing: 1px; margin-top: 2px; }
-        .header-badge { font-size: 0.7rem; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
+        .header-badge { font-size: 0.7 flex-wrap; color: var(--mist-grey); margin-top: 4px; letter-spacing: 0.5px; }
         .logout-link { position: absolute; top: 24px; right: 20px; font-size: 0.75rem; color: var(--mist-grey); text-decoration: underline; cursor: pointer; }
 
         .identity-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--mist-grey); padding: 12px 20px; background: var(--bg-base); border-bottom: 1px solid var(--border-line); }
@@ -89,7 +89,6 @@
         .news-body-editable { font-size: 0.92rem; line-height: 1.6; color: var(--ink-black); margin-bottom: 12px; padding: 4px; border: 1px solid transparent; transition: all 0.2s; }
         .news-body-editable:focus { background: var(--white); border-color: var(--moss-green); outline: none; }
         
-        /* 討論區塊與矩陣討論串樣式 */
         .comment-container { background: var(--bg-base); padding: 14px; margin-top: 12px; border-radius: 2px; }
         .comment-title { font-size: 0.72rem; font-weight: 700; color: var(--moss-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-line); padding-bottom: 4px; }
         
@@ -99,7 +98,6 @@
         .matrix-user { font-weight: 700; color: var(--ink-black); }
         .matrix-time { font-size: 0.68rem; color: var(--mist-grey); margin-left: 6px; }
         
-        /* 回覆容器：堅持置左、不縮進，改用左側輕格線提示層級關係 */
         .matrix-replies-wrapper { margin-top: 4px; padding-left: 8px; border-left: 2px solid var(--border-line); text-align: left; background: rgba(0,0,0,0.01); }
 
         .comment-input-group { display: flex; gap: 8px; margin-top: 12px; }
@@ -269,7 +267,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 預設核心帳號基礎結構
         const defaultUsers = {
             'yyen77': { pwd: '0430', nickname: 'yyen77', role: 'admin' },
             'yychiii_': { pwd: '0912', nickname: 'yychiii_', role: 'applicant' }
@@ -397,7 +394,7 @@
         }
 
         function initPanelPrivileges() {
-            const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
+            const isAdmin = (sessionUser && (sessionUser.role === 'admin' || sessionUser.id === 'yyen77'));
             const navbar = document.getElementById('systemNavbar');
             
             if (isAdmin) {
@@ -426,6 +423,7 @@
         function previewFile(inputEl, previewId) {
             const file = inputEl.files[0];
             const previewContainer = document.getElementById(previewId);
+            if (!previewContainer) return;
             previewContainer.innerHTML = '';
             
             if (file) {
@@ -441,54 +439,68 @@
             }
         }
 
-        // ─── NEWS 模組邏輯（全新升級：無限制樹狀討論矩陣，一律置左） ───
+        // ────────────────────────────────────────────────────────────
+        // 🛡️ NEWS 模組邏輯（全機型極致相容安全版：解決 iPhone 15/17 核心地雷）
+        // ────────────────────────────────────────────────────────────
+        
+        // 防禦修復 1：遞迴函數完全獨立於最外層，排除 WebKit 閉包區塊作用域未初始化死鎖
+        function renderMatrixComments(commentsList, positionPath, itemId) {
+            if (!commentsList || !Array.isArray(commentsList) || commentsList.length === 0) return '';
+            let html = '';
+            
+            commentsList.forEach((c, idx) => {
+                if (!c) return;
+                const currentPath = positionPath === '' ? `${idx}` : `${positionPath}-${idx}`;
+                let replyBtn = `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="triggerMatrixReply(${itemId}, '${currentPath}')">回覆</button>`;
+                
+                let subRepliesHtml = '';
+                if (c.replies && Array.isArray(c.replies) && c.replies.length > 0) {
+                    subRepliesHtml = `<div class="matrix-replies-wrapper">${renderMatrixComments(c.replies, currentPath, itemId)}</div>`;
+                }
+
+                html += `
+                    <div class="matrix-node">
+                        <div class="matrix-content-line">
+                            <span class="matrix-user">${c.user || '未知夥伴'}</span>
+                            <span class="matrix-time">⏱️ ${c.time || ''}</span>：
+                            <span>${c.text || ''}</span> ${replyBtn}
+                        </div>
+                        ${subRepliesHtml}
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        // 防禦修復 2：安全擷取時間，阻斷 iPhone 的 12/24 小時制無空白字串造成 split 崩潰
+        function getSafeShortTime() {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        }
+
         function fillNewsData() {
             const container = document.getElementById('newsListContainer');
+            if (!container) return;
             if (!localDB.news) localDB.news = [];
 
             container.innerHTML = localDB.news.length === 0 ? '<p style="font-size:0.8rem; color:var(--mist-grey); padding:20px 0;">暫無公告</p>' : '';
-            const isAdmin = (sessionUser.role === 'admin' || sessionUser.id === 'yyen77');
+            const isAdmin = (sessionUser && (sessionUser.role === 'admin' || sessionUser.id === 'yyen77'));
 
             localDB.news.forEach(item => {
+                if (!item) return;
                 const div = document.createElement('div');
                 div.className = 'news-item';
 
-                // 遞迴渲染函數：用來處理不限層級的留言與回覆留言再留言
-                function renderMatrixComments(commentsList, positionPath) {
-                    if (!commentsList || commentsList.length === 0) return '';
-                    let html = '';
-                    
-                    commentsList.forEach((c, idx) => {
-                        // 當前節點的精確索引路徑 (例如: "0", "0-1", "0-1-2")
-                        const currentPath = positionPath === '' ? `${idx}` : `${positionPath}-${idx}`;
-                        
-                        // 所有人皆可點擊回覆按鈕進行再留言
-                        let replyBtn = `<button class="btn-action-link" style="font-size:0.7rem; font-weight:bold;" onclick="triggerMatrixReply(${item.id}, '${currentPath}')">回覆</button>`;
-                        
-                        // 渲染子回覆（遞迴呼叫）
-                        let subRepliesHtml = '';
-                        if (c.replies && c.replies.length > 0) {
-                            subRepliesHtml = `<div class="matrix-replies-wrapper">${renderMatrixComments(c.replies, currentPath)}</div>`;
-                        }
-
-                        html += `
-                            <div class="matrix-node">
-                                <div class="matrix-content-line">
-                                    <span class="matrix-user">${c.user}</span>
-                                    <span class="matrix-time">⏱️ ${c.time || ''}</span>：
-                                    <span>${c.text}</span> ${replyBtn}
-                                </div>
-                                ${subRepliesHtml}
-                            </div>
-                        `;
-                    });
-                    return html;
-                }
-
-                let commentsHtml = renderMatrixComments(item.comments, '');
+                let commentsHtml = renderMatrixComments(item.comments, '', item.id);
                 let imgHtml = item.fileData ? `<div style="margin-top:8px;"><img src="${item.fileData}" style="max-width:100%; max-height:150px; border:1px solid var(--border-line); padding:2px;"></div>` : '';
                 
-                const isAuthor = (item.author === sessionUser.id || isAdmin);
+                const isAuthor = (sessionUser && (item.author === sessionUser.id || isAdmin));
+                
+                // 防禦修復 3：將 contenteditable 綁定純字串屬性，避開舊 Safari 嚴格類型錯誤
+                const editableAttr = isAuthor ? 'true' : 'false';
 
                 div.innerHTML = `
                     <div class="news-meta">
@@ -496,9 +508,9 @@
                         ${isAuthor ? `<span style="color:var(--danger-text); cursor:pointer;" onclick="removeNews(${item.id})">刪除</span>` : ''}
                     </div>
                     <div class="news-body-editable" 
-                         contenteditable="${isAuthor}" 
+                         contenteditable="${editableAttr}" 
                          onfocus="currentlyEditingNewsId=${item.id}"
-                         onblur="commitNewsEdit(${item.id}, this)">${item.text}</div>
+                         onblur="commitNewsEdit(${item.id}, this)">${item.text || ''}</div>
                     ${imgHtml}
                     
                     <div class="comment-container">
@@ -515,6 +527,7 @@
         }
 
         function createNews() {
+            if (!sessionUser) return;
             const text = document.getElementById('newsInputArea').value.trim();
             if (!text) return;
             const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).replace(/\//g, '-');
@@ -552,12 +565,13 @@
             pushUpdate();
         }
 
-        // 新增第一層根留言
         function submitComment(newsId) {
+            if (!sessionUser) return;
             const input = document.getElementById(`cInput-${newsId}`);
-            const text = input.value.trim();
+            const text = input ? input.value.trim() : '';
             if (!text) return;
-            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || ''; 
+            
+            const timeStr = getSafeShortTime(); 
 
             const target = localDB.news.find(n => n.id === newsId);
             if (target) {
@@ -568,22 +582,25 @@
                     time: timeStr, 
                     replies: [] 
                 });
-                input.value = '';
+                if(input) input.value = '';
                 pushUpdate();
             }
         }
 
-        // 處理對特定留言/回覆進行「再留言」的矩陣核心函數
         function triggerMatrixReply(newsId, pathString) {
+            if (!sessionUser) return;
             const replyText = prompt('請輸入您的討論回覆內容：');
             if (replyText === null || replyText.trim() === "") return;
-            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false }).split(' ')[1] || '';
+            
+            const timeStr = getSafeShortTime();
 
             const targetNews = localDB.news.find(n => n.id === newsId);
-            if (!targetNews) return;
+            if (!targetNews || !targetNews.comments) return;
 
-            // 依據 pathString ("0-1-2") 尋找嵌套物件
+            // 防禦修復 4：路徑安全解構，加上多層未定義防護 (Optional Chaining 模擬)
             const indexes = pathString.split('-').map(Number);
+            if (indexes.length === 0 || !targetNews.comments[indexes[0]]) return;
+            
             let currentCommentLevel = targetNews.comments[indexes[0]];
 
             for (let i = 1; i < indexes.length; i++) {
@@ -596,7 +613,6 @@
                 if (!currentCommentLevel.replies) {
                     currentCommentLevel.replies = [];
                 }
-                // 置入回覆資料
                 currentCommentLevel.replies.push({
                     user: `${sessionUser.id} (${sessionUser.nickname})`,
                     text: replyText.trim(),
@@ -612,7 +628,8 @@
         
         function linkValidationContent() {
             const item = document.getElementById('appItemSelect').value;
-            document.getElementById('validationContent').value = validationRules[item] || '';
+            const targetEl = document.getElementById('validationContent');
+            if(targetEl) targetEl.value = validationRules[item] || '';
         }
 
         function createApplication() {
@@ -666,17 +683,18 @@
         // ─── 🛡️ 雙向交叉簽核核心邏輯 ───
         function fillEventsData() {
             const container = document.getElementById('eventsContainer');
+            if (!container) return;
             container.innerHTML = '';
             if(!localDB.events) localDB.events = [];
 
             const filterValue = document.getElementById('eventFilterSelect').value;
             
             let filtered = [];
-            if (sessionUser.id === 'yyen77') {
+            if (sessionUser && sessionUser.id === 'yyen77') {
                 filtered = localDB.events.filter(e => e.applicantId === 'yyen77' || e.applicantId === 'yychiii_');
-            } else if (sessionUser.id === 'yychiii_') {
+            } else if (sessionUser && sessionUser.id === 'yychiii_') {
                 filtered = localDB.events.filter(e => e.applicantId === 'yychiii_' || e.applicantId === 'yyen77');
-            } else {
+            } else if (sessionUser) {
                 filtered = localDB.events.filter(e => e.applicantId === sessionUser.id);
             }
 
@@ -699,7 +717,7 @@
                 if (ev.status === '已取消') statusTag = `<span style="color:var(--mist-grey); text-decoration:line-through;">${ev.status}</span>`;
 
                 let actionBtn = '';
-                if (ev.status === '簽核中') {
+                if (ev.status === '簽核中' && sessionUser) {
                     if (sessionUser.id === ev.applicantId) {
                         actionBtn = `<button class="btn-action-link btn-action-danger" onclick="updateEventStatus(${ev.id}, '已取消')">取消申請</button>`;
                     }
@@ -763,6 +781,7 @@
 
             const match = localDB.events.find(e => e.id === id);
             if (match) {
+                match.status = '開設已駁回';
                 match.status = '已駁回';
                 match.rejectReason = reason.trim() ? reason.trim() : '無明確原因';
                 match.approveTime = new Date().toLocaleString('zh-TW', { hour12: false }).replace(/\//g, '-');
@@ -839,6 +858,7 @@
 
         function fillPartnersData() {
             const container = document.getElementById('partnerListContainer');
+            if (!container) return;
             container.innerHTML = '';
             if(!localDB.users) localDB.users = defaultUsers;
 
@@ -871,7 +891,5 @@
             });
         }
     </script>
-</body>
-</html>
 </body>
 </html>
